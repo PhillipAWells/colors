@@ -1,7 +1,7 @@
 {
 	"name": "@pawells/colors",
 	"displayName": "Colors",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "TypeScript color space management and conversion library. ESM-only, no runtime dependencies, targets ES2022.",
 	"type": "module",
 	"main": "./build/index.js",
