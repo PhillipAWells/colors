@@ -1,3 +1,4 @@
+import type { TConstructorFunction } from '@pawells/typescript-common';
 import { ColorSpace } from './color-spaces/_color-space.js';
 import { ColorSpaceManager } from './color-spaces/manager.js';
 import { W3C } from './w3c.js';
@@ -14,9 +15,6 @@ function ObjectSortKeys<T extends Record<number, unknown>>(obj: T): T {
 		});
 	return sorted as T;
 }
-
-// Type helper for constructor functions
-type TConstructorFunction<T> = { new (...args: any[]): T };
 
 /**
  * A mapping of numeric values (0-1) to color instances, used for creating color scales and gradients.

@@ -248,17 +248,17 @@ export class LMS extends ColorSpace {
 		switch (component) {
 			case 'L': {
 				const value = typeof colorOrValue === 'number' ? colorOrValue : colorOrValue.L;
-				AssertNumber(value, { gte: 0 }, { class: ColorError, message: 'Channel(L) must be a finite number greater than or equal to 0.' });
+				AssertNumber(value, { gte: 0, finite: true }, { class: ColorError, message: 'Channel(L) must be a finite number greater than or equal to 0.' });
 				break;
 			}
 			case 'M': {
 				const value = typeof colorOrValue === 'number' ? colorOrValue : colorOrValue.M;
-				AssertNumber(value, { gte: 0 }, { class: ColorError, message: 'Channel(M) must be a finite number greater than or equal to 0.' });
+				AssertNumber(value, { gte: 0, finite: true }, { class: ColorError, message: 'Channel(M) must be a finite number greater than or equal to 0.' });
 				break;
 			}
 			case 'S': {
 				const value = typeof colorOrValue === 'number' ? colorOrValue : colorOrValue.S;
-				AssertNumber(value, { gte: 0 }, { class: ColorError, message: 'Channel(S) must be a finite number greater than or equal to 0.' });
+				AssertNumber(value, { gte: 0, finite: true }, { class: ColorError, message: 'Channel(S) must be a finite number greater than or equal to 0.' });
 				break;
 			}
 		}
