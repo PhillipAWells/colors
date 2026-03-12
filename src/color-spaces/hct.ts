@@ -354,10 +354,10 @@ export class HCT extends ColorSpace {
 	 */
 	public static FromCAM16(color: CAM16): HCT {
 		CAM16.Validate(color);
-		// In a full implementation, we would need to get the ARGB from CAM16
-		// and calculate L* from it. For now, we'll use a simplified approach.
-		// T would be calculated as lstarFromArgb of the CAM16's ARGB representation
-		const t = 50; // Placeholder - would be calculated from CAM16's luminance
+		// T (tone) is CIE Lab L* — convert CAM16 back to XYZ then to Lab to obtain it.
+		const xyz = XYZ.FromCAM16(color);
+		const lab = Lab.FromXYZ(xyz);
+		const t = Math.max(0, Math.min(100, lab.L));
 		return new HCT(color.H, color.C, t);
 	}
 
@@ -385,8 +385,12 @@ export class HCT extends ColorSpace {
 	 */
 	public static FromXYZ(color: XYZ): HCT {
 		XYZ.Validate(color);
-		const cam16 = color.Convert(CAM16) as CAM16;
-		return HCT.FromCAM16(cam16);
+		// H and C come from CAM16; T (tone) is CIE Lab L* — derive both directly
+		// from the same XYZ so we avoid an unnecessary XYZ → CAM16 → XYZ round-trip.
+		const cam16 = CAM16.FromXYZ(color);
+		const lab = Lab.FromXYZ(color);
+		const t = Math.max(0, Math.min(100, lab.L));
+		return new HCT(cam16.H, cam16.C, t);
 	}
 
 	/**
@@ -426,51 +430,40 @@ export class HCT extends ColorSpace {
 	 * @private
 	 */
 	private static _SolveToRGB(hueDegrees: number, chroma: number, tone: number): RGB {
-		console.log(`[HCT Solver] Input: H=${hueDegrees}, C=${chroma}, T=${tone}`);
-
 		// Handle edge cases
 		if (chroma < 0.0001) {
 			// Achromatic - just use tone as gray
 			const gray = tone / 100;
-			console.log(`[HCT Solver] Achromatic, returning gray: ${gray}`);
 			return new RGB(gray, gray, gray);
 		}
 
 		if (tone < 0.0001) {
-			console.log('[HCT Solver] Near black');
 			return new RGB(0, 0, 0);
 		}
 
 		if (tone > 99.9999) {
-			console.log('[HCT Solver] Near white');
 			return new RGB(1, 1, 1);
 		}
 
-		// Binary search for the right J value
-		// We need to find a J such that CAM16(H, C, J) → XYZ → RGB → XYZ → Lab gives us tone T
-
+		// Binary search for the right J value.
+		// Find a J such that CAM16(H, C, J) → XYZ → RGB → XYZ → Lab gives the target tone T.
 		let jLow = 0;
 		let jHigh = 100;
 		let bestRGB = new RGB(tone / 100, tone / 100, tone / 100);
 		let bestError = Infinity;
-		let successCount = 0;
-		let failCount = 0;
 
-		// Binary search with 20 iterations for better precision
+		// 20 iterations for sufficient precision
 		for (let iteration = 0; iteration < 20; iteration++) {
 			const jMid = (jLow + jHigh) / 2;
 
 			// Estimate other CAM16 parameters from J and C
-			// These are approximations based on CAM16 relationships
 			const jNorm = jMid / 100;
 			const q = (4 / Math.sqrt(jNorm)) * Math.sqrt(jNorm) * (100 + 16);
 			const m = chroma * Math.pow(jNorm, 0.25);
 			const s = 50 * Math.sqrt((chroma * jMid) / (jMid + 300));
 
-			// Create CAM16 with estimated parameters
 			const testCam16 = new CAM16(hueDegrees, chroma, jMid, q, m, s);
 
-			// Manual CAM16 → XYZ → RGB conversion
 			let testRGB: RGB;
 			try {
 				const testXYZ = XYZ.FromCAM16(testCam16);
@@ -480,10 +473,7 @@ export class HCT extends ColorSpace {
 				if (testRGB.R < -0.001 || testRGB.R > 1.001 ||
 				    testRGB.G < -0.001 || testRGB.G > 1.001 ||
 				    testRGB.B < -0.001 || testRGB.B > 1.001) {
-					// Out of gamut - this J is too high
-					if (iteration === 0) console.log(`[HCT Solver] J=${jMid.toFixed(1)} out of gamut: RGB(${testRGB.R.toFixed(3)}, ${testRGB.G.toFixed(3)}, ${testRGB.B.toFixed(3)})`);
 					jHigh = jMid;
-					failCount++;
 					continue;
 				}
 
@@ -493,28 +483,22 @@ export class HCT extends ColorSpace {
 					Math.max(0, Math.min(1, testRGB.G)),
 					Math.max(0, Math.min(1, testRGB.B)),
 				);
-				successCount++;
-			} catch (error) {
-				// Conversion failed - this J is out of range
-				if (iteration === 0) console.log(`[HCT Solver] J=${jMid.toFixed(1)} conversion failed:`, error);
+			} catch {
 				jHigh = jMid;
-				failCount++;
 				continue;
 			}
 
-			// Manual RGB → XYZ → Lab to check resulting tone
+			// RGB → XYZ → Lab to check resulting tone
 			const resultXYZ = XYZ.FromRGB(testRGB);
 			const resultLab = Lab.FromXYZ(resultXYZ);
 			const resultTone = resultLab.L;
 
-			// Track the best result
 			const error = Math.abs(resultTone - tone);
 			if (error < bestError) {
 				bestError = error;
 				bestRGB = testRGB;
 			}
 
-			// Binary search adjustment
 			if (resultTone < tone) {
 				jLow = jMid;
 			} else {
@@ -523,14 +507,10 @@ export class HCT extends ColorSpace {
 
 			// Early exit if close enough
 			if (error < 0.2) {
-				console.log(`[HCT Solver] Converged! Success=${successCount}, Fail=${failCount}, Error=${error.toFixed(3)}`);
-				console.log(`[HCT Solver] Result RGB: (${testRGB.R.toFixed(3)}, ${testRGB.G.toFixed(3)}, ${testRGB.B.toFixed(3)})`);
 				return testRGB;
 			}
 		}
 
-		console.log(`[HCT Solver] Max iterations. Success=${successCount}, Fail=${failCount}, BestError=${bestError.toFixed(3)}`);
-		console.log(`[HCT Solver] Best RGB: (${bestRGB.R.toFixed(3)}, ${bestRGB.G.toFixed(3)}, ${bestRGB.B.toFixed(3)})`);
 		return bestRGB;
 	}
 
