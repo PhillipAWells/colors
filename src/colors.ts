@@ -151,7 +151,7 @@ export class Colors {
 				const [singleColor] = color;
 				if (singleColor === undefined) throw new ColorError('Invalid color in array');
 				result[SCALE_MIDPOINT] = singleColor;
-				return ObjectSortKeys(Colors.Scale(result, resolvedValues));
+				return Colors.Scale(result, resolvedValues);
 			}
 
 			if (color.length === 2) {
@@ -159,14 +159,14 @@ export class Colors {
 				if (firstColor === undefined || secondColor === undefined) throw new ColorError('Invalid color in array');
 				result[0] = firstColor;
 				result[1] = secondColor;
-				return ObjectSortKeys(Colors.Scale(result, resolvedValues));
+				return Colors.Scale(result, resolvedValues);
 			}
 
 			const step = 1 / (color.length - 1);
 			color.forEach((c, i) => {
 				result[i * step] = c;
 			});
-			return ObjectSortKeys(Colors.Scale(result, resolvedValues));
+			return Colors.Scale(result, resolvedValues);
 		}
 
 		// Handle color scale object case
