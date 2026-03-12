@@ -78,7 +78,8 @@ export abstract class ColorSpace {
 	 */
 	public static Assert(c: unknown): asserts c is ColorSpace {
 		if (!(c instanceof ColorSpace)) {
-			throw new ColorError(`Expected instance of ColorSpace, got ${typeof c}`);
+			const received = c === null ? 'null' : (c as object)?.constructor?.name ?? typeof c;
+			throw new ColorError(`Expected instance of ColorSpace, got ${received}`);
 		}
 	}
 
@@ -304,7 +305,7 @@ export abstract class ColorSpace {
 	 */
 	public LERP<TColorSpace extends ColorSpace>(color: TColorSpace, t: number): TColorSpace {
 		if (this.constructor !== color.constructor) {
-			throw new Error('Cannot interpolate between different color spaces');
+			throw new ColorError('Cannot interpolate between different color spaces');
 		}
 
 		const CTOR = this.Metadata.Ctor;
