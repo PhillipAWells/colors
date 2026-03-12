@@ -354,10 +354,11 @@ export class HCT extends ColorSpace {
 	 */
 	public static FromCAM16(color: CAM16): HCT {
 		CAM16.Validate(color);
-		// T (tone) is CIE Lab L* — convert CAM16 back to XYZ then to Lab to obtain it.
+		// T (tone) is CIE Lab L* — convert CAM16 back to XYZ and compute L* directly.
+		// We avoid going through the Lab class because XYZ.FromCAM16 can produce Y > 100
+		// for high-chroma inputs, which would fail Lab's [0, 100] validation on L*.
 		const xyz = XYZ.FromCAM16(color);
-		const lab = Lab.FromXYZ(xyz);
-		const t = Math.max(0, Math.min(100, lab.L));
+		const t = HCT._lstarFromXYZY(xyz.Y);
 		return new HCT(color.H, color.C, t);
 	}
 
@@ -386,10 +387,9 @@ export class HCT extends ColorSpace {
 	public static FromXYZ(color: XYZ): HCT {
 		XYZ.Validate(color);
 		// H and C come from CAM16; T (tone) is CIE Lab L* — derive both directly
-		// from the same XYZ so we avoid an unnecessary XYZ → CAM16 → XYZ round-trip.
+		// from the same XYZ to avoid an unnecessary XYZ → CAM16 → XYZ round-trip.
 		const cam16 = CAM16.FromXYZ(color);
-		const lab = Lab.FromXYZ(color);
-		const t = Math.max(0, Math.min(100, lab.L));
+		const t = HCT._lstarFromXYZY(color.Y);
 		return new HCT(cam16.H, cam16.C, t);
 	}
 
@@ -522,6 +522,25 @@ export class HCT extends ColorSpace {
 	 * @param value - The value to validate
 	 * @throws {ColorError} When the value is invalid for the component
 	 */
+	/**
+	 * Computes CIE Lab L* from the Y component of an XYZ color.
+	 *
+	 * Uses the standard CIE 1976 formula with D65 reference white (Yn = 100).
+	 * The result is clamped to [0, 100] so it is always a valid HCT tone value,
+	 * even when the source XYZ.Y exceeds the reference white (HDR / out-of-gamut colors).
+	 *
+	 * @param y - The Y (luminance) component of an XYZ color
+	 * @returns CIE Lab L* clamped to [0, 100]
+	 */
+	private static _lstarFromXYZY(y: number): number {
+		// CIE 1976 Lab constants: ε = 216/24389 ≈ 0.008856, κ = 24389/27 ≈ 903.3
+		const EPSILON = 216 / 24389;
+		const KAPPA = 24389 / 27;
+		const yr = y / 100; // normalise against D65 Y reference (100)
+		const fy = yr > EPSILON ? Math.cbrt(yr) : (KAPPA * yr + 16) / 116;
+		return Math.max(0, Math.min(100, 116 * fy - 16));
+	}
+
 	private static _AssertComponent(component: THCTComponentSelection, value: number): void;
 	private static _AssertComponent(component: THCTComponentSelection, color: HCT): void;
 	private static _AssertComponent(component: THCTComponentSelection, colorOrValue: HCT | number): void {
