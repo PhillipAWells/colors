@@ -4,7 +4,7 @@ This file provides guidance to AI coding agents when working with code in this r
 
 ## Project Overview
 
-`@pawells/colors` is a shared TypeScript color space management and conversion library published to npm. It targets ES2022, is distributed as ESM, and has no runtime dependencies. The library exports from a single entry point (`src/index.ts`).
+`@pawells/colors` is a shared TypeScript color space management and conversion library published to npm. It targets ES2022 and is distributed as ESM. The library exports from a single entry point (`src/index.ts`).
 
 ## Package Manager
 
@@ -69,7 +69,7 @@ Each domain has its own directory under `src/`:
 
 **Converting between color spaces**: Use `instance.Convert(TargetClass)`. The manager automatically finds the shortest conversion path. Direct conversions are preferred; multi-hop conversions go through XYZ or Lab as intermediaries.
 
-**No runtime dependencies**: Keep `dependencies` empty. All tooling belongs in `devDependencies`.
+**Runtime dependencies**: The library ships two runtime dependencies — `@pawells/math-extended` (matrix/vector math) and `reflect-metadata` (decorator metadata). All other tooling belongs in `devDependencies`.
 
 **ESM only**: The package is `"type": "module"`. Use ESM import/export syntax throughout; avoid CommonJS patterns. Internal imports must use `.js` extensions.
 
