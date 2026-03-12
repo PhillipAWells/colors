@@ -179,7 +179,7 @@ export class ColorSpaceManager {
 
 			// If no path was found, throw error
 			if (!foundPath) {
-				throw new ColorError(`No conversion path exists from '${input.constructor.name}' to '${colorSpace.name}'.`);
+				throw new ColorError(`No conversion path exists from '${startNode}' to '${endNode}'.`);
 			}
 
 			// Store path in cache

@@ -1,3 +1,4 @@
+import type { TConstructorFunction } from '@pawells/typescript-common';
 import { ColorSpace } from './color-spaces/_color-space.js';
 import { ColorSpaceManager } from './color-spaces/manager.js';
 import { W3C } from './w3c.js';
@@ -14,9 +15,6 @@ function ObjectSortKeys<T extends Record<number, unknown>>(obj: T): T {
 		});
 	return sorted as T;
 }
-
-// Type helper for constructor functions
-type TConstructorFunction<T> = { new (...args: any[]): T };
 
 /**
  * A mapping of numeric values (0-1) to color instances, used for creating color scales and gradients.
@@ -151,7 +149,7 @@ export class Colors {
 				const [singleColor] = color;
 				if (singleColor === undefined) throw new ColorError('Invalid color in array');
 				result[SCALE_MIDPOINT] = singleColor;
-				return ObjectSortKeys(Colors.Scale(result, resolvedValues));
+				return Colors.Scale(result, resolvedValues);
 			}
 
 			if (color.length === 2) {
@@ -159,14 +157,14 @@ export class Colors {
 				if (firstColor === undefined || secondColor === undefined) throw new ColorError('Invalid color in array');
 				result[0] = firstColor;
 				result[1] = secondColor;
-				return ObjectSortKeys(Colors.Scale(result, resolvedValues));
+				return Colors.Scale(result, resolvedValues);
 			}
 
 			const step = 1 / (color.length - 1);
 			color.forEach((c, i) => {
 				result[i * step] = c;
 			});
-			return ObjectSortKeys(Colors.Scale(result, resolvedValues));
+			return Colors.Scale(result, resolvedValues);
 		}
 
 		// Handle color scale object case

@@ -1,5 +1,5 @@
 /* eslint-disable no-magic-numbers */
-import { Clamp, TVector3, LinearInterpolation, VectorMultiply, VectorAdd, VectorDot } from '@pawells/math-extended';
+import { Clamp, IMatrix3, TVector3, LinearInterpolation, MatrixMultiply, VectorDot, VectorMultiply, VectorAdd } from '@pawells/math-extended';
 import { XYZ } from './xyz.js';
 
 /**
@@ -202,7 +202,7 @@ export class CAM16ViewingConditions {
 		const xyz = whitePoint;
 
 		// XYZ to RGB matrix transformation (Bradford chromatic adaptation matrix)
-		const xyzToRgbMatrix: [TVector3, TVector3, TVector3] = [
+		const xyzToRgbMatrix: IMatrix3 = [
 			[0.401288, 0.650173, -0.051461],
 			[-0.250268, 1.204414, 0.045854],
 			[-0.002079, 0.048952, 0.953127],
@@ -210,11 +210,7 @@ export class CAM16ViewingConditions {
 
 		// Convert XYZ white point to RGB using matrix-vector multiplication
 		const xyzVector: TVector3 = [xyz.X, xyz.Y, xyz.Z];
-		const rgbW: TVector3 = [
-			VectorDot(xyzToRgbMatrix[0], xyzVector),
-			VectorDot(xyzToRgbMatrix[1], xyzVector),
-			VectorDot(xyzToRgbMatrix[2], xyzVector),
-		];
+		const rgbW = MatrixMultiply(xyzToRgbMatrix, xyzVector);
 
 		const f = SURROUND_BASELINE + (surround / SURROUND_SCALE);
 		this.SurroundImpactFactor = f >= SURROUND_THRESHOLD ? LinearInterpolation(SURROUND_BRIGHT_MIN, SURROUND_BRIGHT_MAX, (f - SURROUND_THRESHOLD) * SURROUND_SCALE) : LinearInterpolation(SURROUND_DIM_MIN, SURROUND_DIM_MAX, (f - SURROUND_BASELINE) * SURROUND_SCALE);

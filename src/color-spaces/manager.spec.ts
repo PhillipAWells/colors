@@ -760,13 +760,6 @@ describe('Color Space Manager', () => {
 
 			const speedup = coldTime / warmTime;
 
-			console.log('\n=== Cache Performance Benchmark ===');
-			console.log(`Iterations: ${ITERATIONS}`);
-			console.log(`Without cache: ${coldTime.toFixed(2)}ms (${(coldTime / ITERATIONS).toFixed(3)}ms per conversion)`);
-			console.log(`With cache: ${warmTime.toFixed(2)}ms (${(warmTime / ITERATIONS).toFixed(3)}ms per conversion)`);
-			console.log(`Speedup: ${speedup.toFixed(2)}x`);
-			console.log('===================================\n');
-
 			// Cache should provide measurable speedup
 			// Note: BFS is fast, so cache provides ~1.5-2x improvement rather than dramatic 10x+
 			expect(speedup).toBeGreaterThan(1.3); // At least 30% faster with cache

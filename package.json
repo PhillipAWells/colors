@@ -1,8 +1,8 @@
 {
 	"name": "@pawells/colors",
 	"displayName": "Colors",
-	"version": "1.0.1",
-	"description": "TypeScript color space management and conversion library. ESM-only, no runtime dependencies, targets ES2022.",
+	"version": "1.1.0",
+	"description": "TypeScript color space management and conversion library. ESM-only, targets ES2022.",
 	"type": "module",
 	"main": "./build/index.js",
 	"types": "./build/index.d.ts",
@@ -23,22 +23,23 @@
 		"test": "vitest run",
 		"test:ui": "vitest --ui",
 		"test:coverage": "vitest --coverage",
+		"pipeline": "yarn typecheck && yarn lint && yarn test && yarn build",
 		"prepublishOnly": "npm run build",
 		"prepare": "husky"
 	},
 	"devDependencies": {
 		"@eslint/js": "^10.0.1",
-		"@stylistic/eslint-plugin": "^5.9.0",
-		"@types/node": "^25.3.0",
-		"@typescript-eslint/eslint-plugin": "^8.0.0",
-		"@typescript-eslint/parser": "^8.0.0",
+		"@stylistic/eslint-plugin": "5.10.0",
+		"@types/node": "25.4.0",
+		"@typescript-eslint/eslint-plugin": "8.57.0",
+		"@typescript-eslint/parser": "8.57.0",
 		"@vitest/coverage-v8": "^4.0.18",
 		"@vitest/ui": "^4.0.18",
-		"eslint": "^10.0.1",
+		"eslint": "10.0.3",
 		"eslint-import-resolver-typescript": "^4.4.4",
 		"eslint-plugin-import": "^2.31.0",
 		"eslint-plugin-unused-imports": "^4.0.0",
-		"globals": "^17.3.0",
+		"globals": "17.4.0",
 		"husky": "^9.1.7",
 		"typescript": "^5.3.3",
 		"vitest": "^4.0.18"
@@ -70,15 +71,11 @@
 	},
 	"homepage": "https://github.com/PhillipAWells/colors#readme",
 	"engines": {
-		"node": ">=24.0.0"
+		"node": ">=22.0.0"
 	},
 	"packageManager": "yarn@4.12.0",
 	"files": [
-		"build/**/*.js",
-		"build/**/*.d.ts",
-		"build/**/*.js.map",
-		"build/**/*.d.ts.map",
-		"!build/**/*.test.*",
+		"build/",
 		"README.md",
 		"LICENSE",
 		".env.example"
@@ -87,7 +84,8 @@
 		"access": "public"
 	},
 	"dependencies": {
-		"@pawells/math-extended": "^1.0.5",
+		"@pawells/math-extended": "1.1.1",
+		"@pawells/typescript-common": "^1.3.1",
 		"reflect-metadata": "^0.2.2"
 	}
 }

@@ -1,6 +1,7 @@
 /* eslint-disable no-magic-numbers */
 import {
 	DegreesToRadians,
+	IMatrix3,
 	TVector3,
 	MatrixMultiply,
 	NormalizeDegrees,
@@ -8,7 +9,6 @@ import {
 	VectorMultiply,
 	VectorAbs,
 	Clamp,
-	AssertVector3,
 } from '@pawells/math-extended';
 import { AssertInstanceOf, AssertNumber } from './assert.js';
 import { CAM16ViewingConditions } from './cam16-viewing-conditions.js';
@@ -407,22 +407,19 @@ export class CAM16 extends ColorSpace {
 	 */
 	private static _FromXyz(xyz: XYZ, viewingConditions: CAM16ViewingConditions = CAM16ViewingConditions.DefaultSrgb): CAM16 {
 		// Convert XYZ to Linear RGB using the transformation matrix
-		const linearRGB = MatrixMultiply(
-			[
-				[0.401288, 0.650173, -0.051461],
-				[-0.250268, 1.204414, 0.045854],
-				[-0.002079, 0.048952, 0.953127],
-			],
-			xyz.ToArray(),
-		);
+		const xyzMatrix: IMatrix3 = [
+			[0.401288, 0.650173, -0.051461],
+			[-0.250268, 1.204414, 0.045854],
+			[-0.002079, 0.048952, 0.953127],
+		];
+		const xyzVector: TVector3 = [xyz.X, xyz.Y, xyz.Z];
+		const linearRGB = MatrixMultiply(xyzMatrix, xyzVector);
 
 		// Apply chromatic adaptation (discount illuminant)
 		const D = VectorMultiply(linearRGB, viewingConditions.RGBAdaptationFactors);
-		AssertVector3(D);
 
 		// Apply post-adaptation non-linear response compression using VectorAbs for optimization
 		const dAbsolute = VectorAbs(D);
-		AssertVector3(dAbsolute);
 
 		const AF: TVector3 = [
 			Math.pow(viewingConditions.LuminanceAdaptationFactor * dAbsolute[0] / 100.0, 0.42),
