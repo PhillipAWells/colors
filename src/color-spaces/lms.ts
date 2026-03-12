@@ -1,5 +1,5 @@
 /* eslint-disable no-magic-numbers */
-import { AssertVector3, IMatrix3, MatrixMultiply, MatrixTranspose } from '@pawells/math-extended';
+import { IMatrix3, MatrixMultiply, TVector3 } from '@pawells/math-extended';
 import { AssertNumber, AssertInstanceOf } from './assert.js';
 import { ColorSpace } from './_color-space.js';
 import { XYZ } from './xyz.js';
@@ -358,10 +358,8 @@ export class LMS extends ColorSpace {
 			[0.0030, 0.0571, 0.8090],
 		];
 
-		// Convert XYZ to matrix form and apply transformation
-		const xyz = color.ToMatrix();
-		const [lms] = MatrixTranspose(MatrixMultiply(conversion, xyz));
-		AssertVector3(lms);
+		const xyzVector: TVector3 = [color.X, color.Y, color.Z];
+		const lms = MatrixMultiply(conversion, xyzVector);
 
 		return new LMS(lms[0], lms[1], lms[2]);
 	}

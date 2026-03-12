@@ -1,5 +1,5 @@
 /* eslint-disable no-magic-numbers */
-import { DegreesToRadians, IMatrix3, TVector3, MatrixMultiply, MatrixInverse, VectorDot, VectorMultiply } from '@pawells/math-extended';
+import { DegreesToRadians, IMatrix3, TVector3, MatrixMultiply, MatrixInverse, VectorMultiply } from '@pawells/math-extended';
 import { AssertInstanceOf, AssertNumber } from './assert.js';
 import { ColorSpace } from './_color-space.js';
 import { CAM16ViewingConditions } from './cam16-viewing-conditions.js';
@@ -611,12 +611,7 @@ export class XYZ extends ColorSpace {	/**
 		// Create RGB vector for matrix transformation
 		const rgbVector: TVector3 = [rF, gF, bF];
 
-		// Use VectorDot for matrix-vector multiplication instead of MatrixMultiply
-		const xyzResult: TVector3 = [
-			VectorDot(transformMatrix[0], rgbVector),
-			VectorDot(transformMatrix[1], rgbVector),
-			VectorDot(transformMatrix[2], rgbVector),
-		];
+		const xyzResult = MatrixMultiply(transformMatrix, rgbVector);
 
 		// Scale result from 0-1 to 0-100 range (D65 white point expects 0-100 scale)
 		return new XYZ(xyzResult[0] * 100, xyzResult[1] * 100, xyzResult[2] * 100);
@@ -737,19 +732,8 @@ export class XYZ extends ColorSpace {	/**
 		// Create LMS vector for better type safety
 		const lmsVector: TVector3 = [color.L, color.M, color.S];
 
-		// Use MatrixInverse and VectorDot for cleaner matrix operations
-		const inverseMatrix = MatrixInverse(conversionMatrix);
-
-		// Ensure matrix inverse succeeded and has proper structure
-		if (!inverseMatrix?.[0] || !inverseMatrix[1] || !inverseMatrix[2]) {
-			throw new ColorError('Matrix inverse failed during LMS to XYZ conversion');
-		}
-
-		const xyzResult: TVector3 = [
-			VectorDot(inverseMatrix[0], lmsVector),
-			VectorDot(inverseMatrix[1], lmsVector),
-			VectorDot(inverseMatrix[2], lmsVector),
-		];
+		const inverseMatrix = MatrixInverse(conversionMatrix) as IMatrix3;
+		const xyzResult = MatrixMultiply(inverseMatrix, lmsVector);
 
 		// Scale result from 0-1 to 0-100 range (D65 white point expects 0-100 scale)
 		return new XYZ(xyzResult[0] * 100, xyzResult[1] * 100, xyzResult[2] * 100);
@@ -877,12 +861,7 @@ export class XYZ extends ColorSpace {	/**
 			[0.0193339, 0.1191920, 0.9503041],
 		];
 
-		// Use VectorDot for matrix-vector multiplication - more efficient and cleaner
-		const xyzResult: TVector3 = [
-			VectorDot(sRGBToXYZMatrix[0], linearRGB),
-			VectorDot(sRGBToXYZMatrix[1], linearRGB),
-			VectorDot(sRGBToXYZMatrix[2], linearRGB),
-		];
+		const xyzResult = MatrixMultiply(sRGBToXYZMatrix, linearRGB);
 
 		// Scale result from 0-1 to 0-100 range (D65 white point expects 0-100 scale)
 		return new XYZ(xyzResult[0] * 100, xyzResult[1] * 100, xyzResult[2] * 100);
